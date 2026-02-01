@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI Voice Bot</title>
+
+  <style>
+    body {
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+    }
+
+    .box {
+      text-align: center;
+    }
+
+    button {
+      font-size: 18px;
+      padding: 10px 20px;
+      margin: 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="box">
+  <h2>🎙️ AI Voice Bot</h2>
+
+  <button onclick="startListening()">🎤 Start</button>
+  <button onclick="stopListening()">⛔ Stop</button>
+
+  <p><b>You:</b> <span id="you">---</span></p>
+  <p><b>Bot:</b> <span id="bot">---</span></p>
+</div>
+
+<script>
+  const SpeechRecognition =
+    window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  const recognition = new SpeechRecognition();
+  recognition.lang = "en-US";
+  recognition.continuous = false;
+
+  function startListening() {
+    recognition.start();
+  }
+
+  function stopListening() {
+    recognition.stop();
+  }
+
+  recognition.onresult = async (event) => {
+    const text = event.results[0][0].transcript;
+    document.getElementById("you").innerText = text;
+
+    const response = await fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: text })
+    });
+
+    const data = await response.json();
+    document.getElementById("bot").innerText = data.answer;
+
+    speak(data.answer);
+  };
+
+  function speak(text) {
+    const speech = new SpeechSynthesisUtterance(text);
+    window.speechSynthesis.speak(speech);
+  }
+</script>
+
+</body>
+</html>
